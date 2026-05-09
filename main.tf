@@ -128,7 +128,8 @@ resource "hcloud_server" "dokploy" {
   }
 
   lifecycle {
-    prevent_destroy = true # Production host is now protected from accidental deletion
+    prevent_destroy = false # Disable to allow terraform destroy to work
+    # prevent_destroy = true # Enable to protect production server from accidental deletion
   }
 }
 
