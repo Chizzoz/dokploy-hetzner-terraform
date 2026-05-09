@@ -16,11 +16,6 @@ resource "hcloud_ssh_key" "dokploy_ssh_key" {
   public_key = file(var.ssh_key_path)
 }
 
-
-
-
-
-
 data "hcloud_datacenters" "all" {}
 
 locals {
@@ -77,7 +72,6 @@ resource "hcloud_server" "dokploy" {
   ssh_keys     = [hcloud_ssh_key.dokploy_ssh_key.id]
   firewall_ids = [hcloud_firewall.dokploy_fw.id]
 
-
   public_net {
     ipv4 = hcloud_primary_ip.dokploy_ip.id
   }
@@ -132,12 +126,6 @@ resource "hcloud_server" "dokploy" {
     # prevent_destroy = true # Enable to protect production server from accidental deletion
   }
 }
-
-
-
-
-
-
 
 output "server_ip" {
   value       = hcloud_server.dokploy.ipv4_address

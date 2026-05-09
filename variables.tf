@@ -34,15 +34,11 @@ variable "extra_ssh_key_path" {
   default     = "~/.ssh/id_ed25519.pub"
 }
 
-
 variable "ssh_key_name" {
   description = "The name of the SSH key as it appears in your Hetzner console"
   type        = string
   default     = "dokploy-key"
 }
-
-
-
 
 variable "private_key_path" {
   description = "Path to the private SSH key"
@@ -61,5 +57,3 @@ variable "backups" {
   type        = bool
   default     = true
 }
-
-
