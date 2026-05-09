@@ -1,107 +1,99 @@
 # Dokploy Terraform Deployment
 
-With this project you can provision a Hetzner VPS with [Dokploy](https://dokploy.com/) pre-installed using Terraform.
+Provision a production-ready Hetzner VPS with [Dokploy](https://dokploy.com/) pre-installed using Terraform.
 
-**What is Dokploy?**
+## 🚀 What's New
 
-An open-source, self-hosted Platform-as-a-Service (PaaS) that simplifies application deployment, database management, and server configuration through a web UI and CLI.
+This project has been customized for a high-security, production-ready setup:
 
-**Why this project?**
+- **Ubuntu 24.04 LTS**: Uses the latest stable Ubuntu image.
+- **Dual Firewalls**: Secured by both a Hetzner Cloud Firewall and internal UFW.
+- **Admin User**: Automatic creation of a non-root administrative user (`dokadmin`).
+- **SSH Hardening**: Root SSH login and password authentication are completely disabled.
+- **Automatic Backups**: Daily backups are enabled by default.
+- **Dynamic Infrastructure**: Automatically provisions a Primary IP and Firewall—no manual pre-setup required in the Hetzner console.
 
-By combining Terraform with Dokploy, you get:
+## 🛠 Default VPS Configuration
 
-- **Infrastructure as Code**: Reproducible server provisioning which you can include in your version control
-- **Easy Deployment**: Use Dokploy's UI/CLI to manage your applications after initial setup
+| Setting | Default Value |
+| :--- | :--- |
+| **Server Type** | `cpx22` (Dedicated vCPU) |
+| **Location** | `nbg1` (Nuremberg, Germany) |
+| **Image** | `ubuntu-24.04` |
+| **Backups** | `true` |
+| **Admin User** | `dokadmin` |
 
-Additionally:
+## 📋 Prerequisites
 
-- **Server hardening and added security**: SSH is hardened and root login is disabled by default. Only clients with the configured SSH key can access the server. To skip this step, remove the remote-exec line that runs `ssh_init.sh` in `main.tf`.
+## 🔑 Two SSH Key Strategy
 
-## Table of Contents
+This project uses a two-key approach for maximum security and automation:
+1. **Terraform Key**: A dedicated, passphrase-free key used only by Terraform for automated provisioning and Dokploy installation.
+2. **Personal Key**: Your main SSH key (likely passphrase-protected) for secure manual access.
 
-- [Default VPS Configuration](#default-vps-configuration)
-- [Prerequisites](#prerequisites)
-- [Setup Instructions](#setup-instructions)
-- [Accessing the Server](#accessing-the-server)
-- [Cleaning Up](#cleaning-up)
+## 📋 Prerequisites
 
-## Default VPS Configuration
+- [Terraform](https://developer.hashicorp.com/terraform/install) installed.
+- [Hetzner Cloud](https://www.hetzner.com/) account and [API token](https://docs.hetzner.com/cloud/api/getting-started/generating-api-token/).
 
-The VPS will be provisioned with the following settings (configurable in `main.tf`):
+## ⚡️ Setup Instructions
 
-```tf
-server_type  = "cx23"
-image        = "docker-ce"
-location     = "fsn1"
-```
-
-## Prerequisites
-
-- [Terraform](https://developer.hashicorp.com/terraform/install) installed
-- [Hetzner Cloud](https://www.hetzner.com/) account with:
-  - Activated account
-  - IPv4 primary IP named "dokploy-ip"
-  - [API token](https://docs.hetzner.com/cloud/api/getting-started/generating-api-token/)
-  - **Optional:** Firewall rules (add to `main.tf` under `firewall_ids`)
-
-## Setup Instructions
-
-### 1. Create SSH Key
-
-Generate SSH keys for server provisioning and access:
+### 1. Create the Dedicated Terraform Key
+Generate a passphrase-free key pair for Terraform's automation:
 
 ```bash
-mkdir -p ~/.ssh/dokploy
-ssh-keygen -t ed25519 -C "dokploy" -f ~/.ssh/dokploy/id_ed25519
+ssh-keygen -t ed25519 -f ~/.ssh/terraform_id_ed25519 -N ""
 ```
 
-The SSH keys will be stored in `~/.ssh/dokploy/` on your local machine.
-
-### 2. Configure Hetzner API Token
-
-Once you've acquired your [Hetzner API token](https://docs.hetzner.com/cloud/api/getting-started/generating-api-token/), store it in the root directory of this project:
+### 2. Configure Variables
+Copy the example variables file and fill in your details:
 
 ```bash
-echo "your-api-token-here" > hetzner-token.txt
+cp terraform.tfvars.example terraform.tfvars
 ```
 
-### 3. Initialize Terraform
+Update `terraform.tfvars` with:
+- `hcloud_token`: Your Hetzner API token.
+- `ssh_key_name`: The name of the key as it appears in your Hetzner console.
+- `ssh_key_path`: `"~/.ssh/terraform_id_ed25519.pub"`
+- `private_key_path`: `"~/.ssh/terraform_id_ed25519"`
+- `extra_ssh_key_path`: `"~/.ssh/id_ed25519.pub"` (Your personal key)
+
+### 3. Initialize and Deploy
 
 ```bash
 terraform init
-```
-
-### 4. Provision the Server
-
-```bash
-terraform fmt
-terraform validate
+terraform plan
 terraform apply
 ```
 
-This will:
 
-- Create a new server on Hetzner Cloud
-- Disable root user and apply SSH hardening
-- Install Dokploy
 
-Upon successful completion, you'll see:
+### 3. Useful Outputs
 
-```bash
-hcloud_server.dokploy-manager (remote-exec): Congratulations, Dokploy is installed!
-hcloud_server.dokploy-manager (remote-exec): Please go to http://<your-ip>:3000
-```
+Upon completion, Terraform will output:
+- **`server_ip`**: Your server's public IP.
+- **`ssh_command`**: A ready-to-use command to log in.
+- **`dokploy_url`**: The URL to access your new dashboard (`http://<ip>:3000`).
 
-> **Note:** Your server's firewall should expose port 3000 otherwise Dokploy will not be accessible.
+## 🔐 Security Features
 
-## Cleaning Up
+- **Root Access**: Root login is disabled via SSH. All administrative tasks should be done via the `dokadmin` user using `sudo`.
+- **Dual Firewalls**: Secured by both a Hetzner Cloud Firewall and internal UFW + Fail2ban.
+  - **Open Ports**: 22 (SSH), 80 (HTTP), 443 (HTTPS), 3000 (Dokploy).
+- **SSH**: Password authentication is disabled; only key-based access is permitted.
+- **Deletion Protection**: The server has `prevent_destroy = true` enabled in Terraform. This prevents accidental deletion through `terraform destroy` or accidental resource replacements.
 
-To destroy all resources created by Terraform:
+## 🧹 Cleaning Up
 
-```bash
-terraform destroy
-```
+To permanently delete your server, you must first disable the safety lock:
 
-**Warning:** This will permanently delete your server and all data on it.
+1. Open `main.tf` and set `prevent_destroy = false`.
+2. Run the destroy command:
+   ```bash
+   terraform destroy
+   ```
 
-> **Note:** If there's a problem with cleaning up the resource automatically, make sure to clean up the known hosts on your local machine and SSH key for this project under `Hetzner Console > Security > SSH keys`.
+**Warning:** This action is irreversible and will delete all data on the server.
+
+
