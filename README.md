@@ -15,19 +15,20 @@ This project has been customized for a high-security, production-ready setup:
 
 ## 🛠 Default VPS Configuration
 
-| Setting | Default Value |
-| :--- | :--- |
-| **Server Type** | `cpx22` (Dedicated vCPU) |
-| **Location** | `nbg1` (Nuremberg, Germany) |
-| **Image** | `ubuntu-24.04` |
-| **Backups** | `true` |
-| **Admin User** | `dokadmin` |
+| Setting         | Default Value                             |
+| :-------------- | :---------------------------------------- |
+| **Server Type** | `cpx22` (Regular Performance Shared vCPU) |
+| **Location**    | `nbg1` (Nuremberg, Germany)               |
+| **Image**       | `ubuntu-24.04`                            |
+| **Backups**     | `true`                                    |
+| **Admin User**  | `dokadmin`                                |
 
 ## 📋 Prerequisites
 
 ## 🔑 Two SSH Key Strategy
 
 This project uses a two-key approach for maximum security and automation:
+
 1. **Terraform Key**: A dedicated, passphrase-free key used only by Terraform for automated provisioning and Dokploy installation.
 2. **Personal Key**: Your main SSH key (likely passphrase-protected) for secure manual access.
 
@@ -39,6 +40,7 @@ This project uses a two-key approach for maximum security and automation:
 ## ⚡️ Setup Instructions
 
 ### 1. Create the Dedicated Terraform Key
+
 Generate a passphrase-free key pair for Terraform's automation:
 
 ```bash
@@ -46,6 +48,7 @@ ssh-keygen -t ed25519 -f ~/.ssh/terraform_id_ed25519 -N ""
 ```
 
 ### 2. Configure Variables
+
 Copy the example variables file and fill in your details:
 
 ```bash
@@ -53,6 +56,7 @@ cp terraform.tfvars.example terraform.tfvars
 ```
 
 Update `terraform.tfvars` with:
+
 - `hcloud_token`: Your Hetzner API token.
 - `ssh_key_name`: The name of the key as it appears in your Hetzner console.
 - `ssh_key_path`: `"~/.ssh/terraform_id_ed25519.pub"`
@@ -67,11 +71,10 @@ terraform plan
 terraform apply
 ```
 
-
-
 ### 3. Useful Outputs
 
 Upon completion, Terraform will output:
+
 - **`server_ip`**: Your server's public IP.
 - **`ssh_command`**: A ready-to-use command to log in.
 - **`dokploy_url`**: The URL to access your new dashboard (`http://<ip>:3000`).
@@ -95,5 +98,3 @@ To permanently delete your server, you must first disable the safety lock:
    ```
 
 **Warning:** This action is irreversible and will delete all data on the server.
-
-
