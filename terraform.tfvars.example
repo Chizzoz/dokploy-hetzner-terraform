@@ -1,0 +1,10 @@
+hcloud_token        = "your_hcloud_token"
+server_name         = "dokploy-server"
+server_type         = "cpx22"
+location            = "nbg1"
+ssh_key_path        = "~/.ssh/terraform_id_ed25519.pub"
+private_key_path    = "~/.ssh/terraform_id_ed25519"
+ssh_key_name        = "your-key-name-in-hetzner"
+extra_ssh_key_path  = "~/.ssh/id_ed25519.pub"
+admin_username      = "dokadmin"
+backups             = true
